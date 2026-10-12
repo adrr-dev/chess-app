@@ -1,0 +1,86 @@
+package templates
+
+import "strconv"
+
+templ StatusPartial(gameID uint, st StatusView, autoReload bool) {
+	<div
+		id="status"
+		if st.State == "running" {
+			hx-get={ "/games/" + strconv.FormatUint(uint64(gameID), 10) + "/analyze/status" }
+			hx-trigger="every 800ms"
+			hx-swap="outerHTML"
+		}
+	>
+		switch st.State {
+		case "none":
+			<p class="text-stone-400 text-sm">Press Analyze to run Stockfish over every move. Click any move to jump the board there.</p>
+			@MoveTable(st.Rows, gameID)
+		case "running":
+			<p class="text-sm">Analyzing… { strconv.Itoa(st.Done) } / { strconv.Itoa(st.Total) } plies</p>
+			@MoveTable(st.Rows, gameID)
+		case "done":
+			if autoReload {
+				<script>
+					if (!window.__rvDone) { window.__rvDone = 1; setTimeout(() => location.reload(), 800); }
+				</script>
+			}
+			if st.Summary != nil {
+				<div class="text-sm mb-2">
+					<span class="mr-3">You: <b>{ accStr(st.Summary.YourAcc) }</b></span>
+					<span class="mr-3">White: { accStr(st.Summary.WhiteAcc) }</span>
+					<span class="mr-3">Black: { accStr(st.Summary.BlackAcc) }</span>
+					for _, cc := range st.Summary.Counts {
+						<span class="mr-2">{ cc.Class }: { strconv.Itoa(cc.N) }</span>
+					}
+				</div>
+				if len(st.Summary.Critical) > 0 {
+					<div class="text-sm mb-2">Critical:
+						for _, p := range st.Summary.Critical {
+							<a class="text-amber-400 underline mr-1" href={ "?ply=" + strconv.Itoa(p) } data-ply={ strconv.Itoa(p) } class="mv">{ strconv.Itoa(p) }</a>
+						}
+					</div>
+				}
+			}
+			@MoveTable(st.Rows, gameID)
+		case "error":
+			<p class="text-red-400 text-sm">Analysis failed: { st.Error }</p>
+			@MoveTable(st.Rows, gameID)
+		}
+	</div>
+}
+
+func accStr(a float64) string {
+	return strconv.FormatFloat(a, 'f', 1, 64)
+}
+
+templ MoveTable(rows []MoveRow, gameID uint) {
+	<table class="text-sm w-full" id="movetable">
+		<tbody>
+			for _, r := range rows {
+				<tr class="border-t border-stone-700">
+					<td class="text-stone-400 pr-2">{ strconv.Itoa(r.N) }.</td>
+					<td>
+						<a href={ "?ply=" + strconv.Itoa(r.White.Ply) } data-ply={ strconv.Itoa(r.White.Ply) } class="mv hover:text-amber-300">{ r.White.San }</a>
+						if r.White.Class != "" {
+							<span class="text-stone-400"> { r.White.Eval } { r.White.Class }</span>
+						}
+					</td>
+					<td>
+						if r.Black != nil {
+							<a href={ "?ply=" + strconv.Itoa(r.Black.Ply) } data-ply={ strconv.Itoa(r.Black.Ply) } class="mv hover:text-amber-300">{ r.Black.San }</a>
+							if r.Black.Class != "" {
+								<span class="text-stone-400"> { r.Black.Eval } { r.Black.Class }</span>
+							}
+						}
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+templ ExplorePartial(fen string, line string) {
+	<div id="explore-result" data-fen={ fen } class="text-sm mt-2">
+		<p>{ line }</p>
+	</div>
+}

@@ -1,0 +1,48 @@
+package templates
+
+import "strconv"
+
+templ IndexPage(games []GameRow) {
+	@Layout("chess-app — import") {
+		<h1 class="text-2xl font-bold mb-4">Chess analysis helper</h1>
+		<section class="bg-stone-800 rounded p-4 mb-6">
+			<h2 class="font-semibold mb-2">Import a finished game</h2>
+			<form action="/games" method="post" enctype="multipart/form-data" class="flex flex-col gap-2">
+				<label class="text-sm">PGN / CSV file <input type="file" name="file" accept=".pgn,.csv,.txt" class="text-sm"/></label>
+				<textarea name="pgn_text" rows="4" placeholder="...or paste PGN text here" class="bg-stone-900 rounded p-2 text-sm"></textarea>
+				<textarea name="csv_text" rows="3" placeholder="...or paste white,black CSV here" class="bg-stone-900 rounded p-2 text-sm"></textarea>
+				<div class="flex items-center gap-4 text-sm">
+					<span>I played as:</span>
+					<label><input type="radio" name="player_color" value="white" checked/> White</label>
+					<label><input type="radio" name="player_color" value="black"/> Black</label>
+				</div>
+				<button type="submit" class="bg-amber-600 hover:bg-amber-500 rounded px-4 py-2 font-semibold w-fit">Import</button>
+			</form>
+		</section>
+		<section>
+			<h2 class="font-semibold mb-2">History</h2>
+			if len(games) == 0 {
+				<p class="text-stone-400 text-sm">No games yet — import one above.</p>
+			} else {
+				<table class="text-sm w-full">
+					<thead><tr class="text-left text-stone-400"><th>Date</th><th>Src</th><th>Result</th><th>You</th><th>Moves</th><th></th></tr></thead>
+					<tbody>
+						for _, g := range games {
+							<tr class="border-t border-stone-700">
+								<td class="py-1">{ g.Created }</td>
+								<td>{ g.Source }</td>
+								<td>{ g.Result }</td>
+								<td>{ g.PlayerColor }</td>
+								<td>{ strconv.Itoa(g.Moves) }</td>
+								<td class="flex gap-2">
+									<a class="text-amber-400 underline" href={ "/games/" + strconv.FormatUint(uint64(g.ID), 10) }>Open</a>
+									<form action={ "/games/" + strconv.FormatUint(uint64(g.ID), 10) + "/delete" } method="post"><button class="text-red-400 underline" type="submit">Del</button></form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</section>
+	}
+}

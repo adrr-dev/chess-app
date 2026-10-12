@@ -1,0 +1,28 @@
+# chess-app
+
+chess-app
+dist/
+*.test
+*.out
+coverage.*
+
+# Go build cache / tools (project-local)
+/bin/
+
+# SQLite dev databases (schema is code: GORM AutoMigrate)
+data/*.db
+data/*.db-*
+
+# Generated templ code (regenerate with `make run` / `templ generate`)
+*_templ.go
+
+# Env / editor / OS
+.env
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Tailwind local build output (MVP uses CDN; keep if you switch to CLI builds)
+web/static/out.css

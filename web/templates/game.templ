@@ -1,0 +1,38 @@
+package templates
+
+import "strconv"
+
+templ GamePage(v GameView) {
+	@Layout("game — chess-app") {
+		<a href="/" class="text-amber-400 underline text-sm">← history</a>
+		<h1 class="text-xl font-bold mt-1">Game #{ strconv.FormatUint(uint64(v.Game.ID), 10) } <span class="text-stone-400 text-sm">{ v.Game.Source } · { v.Game.Result } · you: { v.Game.PlayerColor } · { strconv.Itoa(v.TotalPlies) } plies</span></h1>
+		<div class="grid md:grid-cols-2 gap-4 mt-3">
+			<section>
+				<div class="flex gap-2">
+					<div class="w-5 bg-stone-700 rounded relative overflow-hidden" title="eval">
+						<div id="evalfill" class="absolute bottom-0 w-full bg-stone-100" style="height:50%"></div>
+					</div>
+					<div id="board" class="flex-1 rounded overflow-hidden min-h-64"></div>
+					<div class="w-16 text-sm text-stone-300">ply <span id="plynum">{ strconv.Itoa(v.Ply) }</span><br/><span id="evaltext"></span></div>
+				</div>
+				<div class="flex flex-wrap gap-2 mt-2 text-sm">
+					<button id="btn-prev" class="underline">Prev</button>
+					<button id="btn-next" class="underline">Next</button>
+					<button id="btn-review" class="underline">Start review</button>
+					<button id="btn-explore" class="underline">Try moves: off</button>
+				</div>
+				<div id="graph" class="mt-2"></div>
+				<div id="coach" class="text-sm mt-2 text-amber-200 min-h-6"></div>
+				<div id="explore-result" class="text-sm mt-1 text-stone-300"></div>
+			</section>
+			<section>
+				<form action={ "/games/" + strconv.FormatUint(uint64(v.Game.ID), 10) + "/analyze" } method="post" class="mb-2">
+					<button type="submit" class="bg-amber-600 hover:bg-amber-500 rounded px-4 py-1 font-semibold text-sm">Analyze</button>
+				</form>
+				@StatusPartial(v.Game.ID, v.Status, false)
+			</section>
+		</div>
+		@templ.JSONScript("review-data", v.Boot)
+		<script type="module" src="/static/review.js"></script>
+	}
+}
